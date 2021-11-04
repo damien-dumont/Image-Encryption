@@ -10,7 +10,7 @@ from os import system
 
 with open('Input.txt', 'r') as fichier: #prendre texte
     texte = fichier.readlines() #texte -> liste    ajouter date?
-    
+
 def listToString(texte) :   # liste -> string
     str1 = ""
 
@@ -18,7 +18,13 @@ def listToString(texte) :   # liste -> string
         str1 += ele
     return str1 
 
+import datetime
+now = datetime.datetime.now()
+
+year = "[" + str(now.year) + "/" + str(now.month) + "/" + str(now.day) + " " + str(now.hour) + ":" + str(now.minute) + "] > "
+
 string = listToString(texte) 
+string = year + string
 encodé = string.encode("ascii")  # string -> bytes
 hexa = binascii.hexlify(encodé)  # convertir en hexa decimal pour connaitre la taille si c est multiple de 6
 
@@ -45,13 +51,10 @@ encodé = string.encode("ascii")  # string -> bytes
 hexa = binascii.hexlify(encodé)  # convertir en hexa decimal pour connaitre la taille si c est multiple de 6
 
 # Hexa est notre code hexadécimal, dont la longueur est un multiple de 6
-#import datetime
-#now = datetime.datetime.now()
-
-#print(now.year, now.month, now.hour, now.minute, now.second)
 
 
-#  hexadécimal -> couleurs et image (carré!) A FAIRE
+
+#  hexadécimal -> couleurs et image (carré!)
 
 hexad = hexa.decode("ascii") #on a le hexadecimal sous forme de string, ce qui facilite le travail comparé à bytes
 
@@ -76,10 +79,4 @@ for i in range(coté):
             hello[i-1, j-1, h] = z
 img = Image.fromarray(hello, 'RGB')
 img.save('Output_image.png')
-# image -> hexadécimal A FAIRE
 
-# hexadécimal -> texte A FAIRE
-
-
-#z = binascii.unhexlify(hexa)
-#print(z)

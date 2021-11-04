@@ -14,11 +14,9 @@ for i in range(coté):
         a = imgArray[i-1,j-1]
         b = hex(int(a[0]))[2:] + hex(int(a[1]))[2:] + hex(int(a[2]))[2:]
         matrix[i-1, j-1] = b
-print(matrix)
 lister = list()
 for i in range(coté):
     lister += matrix.tolist()[i]
-print(lister)
 def listToString(lister) :   # liste -> string
     str1 = ""
 
@@ -29,6 +27,5 @@ def listToString(lister) :   # liste -> string
 hexa = listToString(lister)
 encodé = binascii.unhexlify(hexa)
 décodé = encodé.decode("ascii")
-print(décodé)
 with open("output.txt", "w") as f:
     f.write(décodé)
