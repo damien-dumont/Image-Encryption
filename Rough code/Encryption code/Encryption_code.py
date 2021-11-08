@@ -57,10 +57,8 @@ hexa = binascii.hexlify(encodé)  # convertir en hexa decimal pour connaitre la 
 #  hexadécimal -> couleurs et image (carré!)
 
 hexad = hexa.decode("ascii") #on a le hexadecimal sous forme de string, ce qui facilite le travail comparé à bytes
-
 chunks, chunk_size = len(hexad), 6
 yes = [ hexad[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
-
 data = np.array(yes)        #setup de la matrice
 coté = int(sqrt(len(yes)))  #mettre en integer pour les calculs après
 shape = (coté,coté)         #matrice carrée
@@ -77,6 +75,7 @@ for i in range(coté):
         for h in range(3):
             z = int(split_string[h],16)
             hello[i-1, j-1, h] = z
+print(hello)
 img = Image.fromarray(hello, 'RGB')
 img.save('Output_image.png')
 
