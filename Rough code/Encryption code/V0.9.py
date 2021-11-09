@@ -41,16 +41,22 @@ def cypher():
     ############ 2.a
     now = datetime.datetime.now()  # Add the date at the beginning of the message
 
-    year = "[" + str(now.year) + "/" + str(now.month) + "/" + str(now.day) + " " + str(now.hour) + ":" + str(now.minute) + "] > "
+    dt =[str(now.year), str(now.month), str(now.day), str(now.hour), str(now.minute)]
+    for i in range(3):                           # Making sure that when the hour, day, minute... is a single digit, it is written as 2 digits starting with 0. 2021/11/9 8:4 becomes 2021/11/09 08:04
+        if len(dt[i+1]) == 2:
+            pass
+        else:
+            dt[i+1] = "0" + dt[i+1]    
 
-    string = year + string
+    date = "[" + dt[0] + "/" + dt[1] + "/" + dt[2] + " " + dt[3] + ":" + dt[4] + "] > "
+    string = date + string                      # Adding the date at the beginning of the message
     ############ 3
     with open("public.txt", "r") as f:
         publicKeyPEM = f.read()
-    publicKey  = rsa.PublicKey.load_pkcs1(publicKeyPEM.encode('utf8'))  # Encryption -> limited to 220 characters because of the date and ID
+    publicKey  = rsa.PublicKey.load_pkcs1(publicKeyPEM.encode('utf8'))  # Encryption -> limited to ~220 characters because of the date and ID -> to test
     encMessage = rsa.encrypt(string.encode(),publicKey)
     ############ 3.a
-    ID_w = "     "                       # ID must be multiple of 3, see below
+    ID_w = "     "                       # ID must be multiple of 3, see below, maximum size is 42 -> to test
 
     if len(ID_w)%3 != 0:
         loop = 3-(len(ID_w)%3)
@@ -120,30 +126,36 @@ def decypher():
 
     b = imgArray.flatten()
     b = list(b)
-    ID_R = "      "
+    ID_R = "z     "
 
     if len(ID_R)%3 != 0:
         loop = 3-(len(ID_R)%3)
         for i in range(loop):
             ID_R += " "
 
-    WOID_L = int(len(ID_R))
-    WOID = b[WOID_L:]          # Removing ID, as it is not encrypted
+    ID_compare = b[len(ID_R)]
+    if b[len(ID_R)] == ID_R:
+    
+        WOID_L = int(len(ID_R))
+        WOID = b[WOID_L:]          # Removing ID, as it is not encrypted
 
-    n_removed = int(WOID[-1])   # Reads the number of characters to remove at the end
-    for i in range(n_removed):
-        WOID = WOID[0:-1]
+        n_removed = int(WOID[-1])   # Reads the number of characters to remove at the end
+        for i in range(n_removed):
+            WOID = WOID[0:-1]
 
-    WOID_b= bytes(WOID)
-    with open("private.txt", "r") as f:
-        privateKeyPEM = f.read()
+        WOID_b= bytes(WOID)
+        with open("private.txt", "r") as f:
+            privateKeyPEM = f.read()
 
-    privateKey  = rsa.PrivateKey.load_pkcs1(privateKeyPEM.encode('utf8'))
-    decMessage = rsa.decrypt(WOID_b, privateKey).decode()
-    txt_read.insert(tk.END, decMessage)
+        privateKey  = rsa.PrivateKey.load_pkcs1(privateKeyPEM.encode('utf8'))
+        decMessage = rsa.decrypt(WOID_b, privateKey).decode()
+        txt_read.insert(tk.END, decMessage)
+    else:
+        txt_read.insert(tk.END, "Incompatible ID")
 
 
-
+left_entry_grid = tk.Frame(root)
+right_entry_grid = tk.Frame(root)
 
 
 btn_keygen = tk.Button(left_grid, text="Generate keys", width=30, command=lambda:keygen())
@@ -154,6 +166,10 @@ btn_key_cypher = tk.Button(left_grid, text = "Encrypt message", width=30, comman
 btn_key_decypher = tk.Button(right_grid, text = "Decrypt message", width=30, command=lambda:decypher())
 write_label = tk.Label(left_grid, text="Write your message here", width=30, bg="black", fg="white")
 read_label = tk.Label(right_grid, text="Your message will be displayed here", width=30, bg="black", fg="white")
+write_code = tk.Entry(left_entry_grid)
+write_code_label = tk.Label(left_entry_grid, text="ID Code:")
+read_code = tk.Entry(right_entry_grid)
+read_code_label = tk.Label(right_entry_grid, text="ID Code:")
 
 btn_keygen.grid(row=0, column=0, sticky="ns")
 btn_key_public.grid(row=1, column=0, sticky="ns")
@@ -163,8 +179,17 @@ btn_key_private.grid(row=1, column=0, sticky="ns")
 left_grid.grid(row = 0, column=0, sticky="ns")
 right_grid.grid(row = 0, column=1, sticky="ns")
 
-txt_write.grid(column=0, sticky="nsew", padx=5, pady=5)
-txt_read.grid(row=1,column=1, sticky="nsew", padx=5, pady=5)
+left_entry_grid.grid(row = 1, column = 0, sticky="ns")
+right_entry_grid.grid(row = 1, column = 1, sticky="ns")
+
+
+write_code.grid(row = 0,column=1)
+read_code.grid(row = 0,column=1)
+write_code_label.grid(row = 0,column=0)
+read_code_label.grid(row = 0,column=0)
+
+txt_write.grid(row = 2,column=0, sticky="nsew", padx=5, pady=5)
+txt_read.grid(row=2,column=1, sticky="nsew", padx=5, pady=5)
 
 btn_key_cypher.grid(row=2, column=0, sticky="ns")
 btn_key_decypher.grid(row=2, column=0, sticky="ns")
