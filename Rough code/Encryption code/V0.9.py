@@ -5,6 +5,8 @@ import numpy as np
 from PIL import Image
 import random
 import tkinter as tk
+import tkinter as tk
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 
 root = tk.Tk()
 root.title("Encryptor/Decryptor tool V1.0")
@@ -20,15 +22,40 @@ right_grid = tk.Frame(root)
 
 
 def keygen():
-        (publicKey, privateKey) = rsa.newkeys(2048)
-        publicKeyPEM = publicKey.save_pkcs1().decode()
-        privateKeyPEM = privateKey.save_pkcs1().decode()
+    (publicKey, privateKey) = rsa.newkeys(2048)        # Generate 2048 bits keys
+    publicKeyPEM = publicKey.save_pkcs1().decode()
+    privateKeyPEM = privateKey.save_pkcs1().decode()
 
-        with open("private.txt", "w") as f:
-                f.write(privateKeyPEM)
+    """Save the current file as a new file."""
+    filepath = asksaveasfilename(
+        defaultextension="txt",
+        filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")],
+    )
+    if not filepath:
+        return
+    with open(filepath, "w") as output_file:
+        text = publicKeyPEM
+        output_file.write(text)
+    root.title(f"Simple Text Editor - {filepath}")
 
-        with open("public.txt", "w") as f:
-            f.write(publicKeyPEM)
+
+
+    filepath = asksaveasfilename(
+        defaultextension="txt",
+        filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")],
+    )
+    if not filepath:
+        return
+    with open(filepath, "w") as output_file:
+        text = privateKeyPEM
+        output_file.write(text)
+    root.title(f"Simple Text Editor - {filepath}")
+#    with open("private.txt", "w") as f:                # To give the option as to where to save the files
+#            f.write(privateKeyPEM)
+
+
+#    with open("public.txt", "w") as f:
+#        f.write(publicKeyPEM)
 
 
 
@@ -65,7 +92,7 @@ def cypher():
 
     ID_ord=[0]*len(ID_w)
     for i in range(len(ID_w)):
-        ID_ord[i]=ord(ID_w[i])
+        ID_ord[i]=ord(ID_w[i])        # Id is converted from string to a list of numbers
 
     ########### 4
     Msg = list(encMessage)
@@ -77,38 +104,34 @@ def cypher():
         for i in range(loops):
             a = random.randint(0,255)
             Msg += [a]
-        last_byte += loops
-    print(last_byte)
+        last_byte += loops              # count the number of random numbers added, see below
     ########## 5
     size = len(Msg)/3
 
     if int(sqrt(size)) == sqrt(size):
         pass
     else:
-        Missing = pow(int(sqrt(size)) + 1, 2) - size  # Adding "0" until the number of pixels is a square number
+        Missing = pow(int(sqrt(size)) + 1, 2) - size  # Adding random numbers until the number of pixels is a square number
         for i in range((int(Missing)*3)-1):
             a = random.randint(0,255)
             Msg += [a]
-        last_byte += (int(Missing)*3)
+        last_byte += (int(Missing)*3)   # the last digit will be read later, to now how many digits we have to remove to get the (encrypted) message back
         Msg += [last_byte]
     ############# 6
 
     chunks, chunk_size = len(Msg), 3
-    split = [ Msg[i:i+chunk_size] for i in range(0, chunks, chunk_size) ] # On split la liste par groupe de 3 pour faire un pixel
-
-    data = np.array(split)        #setup de la matrice
-    side = int(sqrt(len(Msg)/3))  #mettre en integer pour les calculs après
-    shape = (side,side)         #matrice carrée
+    split = [ Msg[i:i+chunk_size] for i in range(0, chunks, chunk_size) ] # Message is split in chunks of 3 digits, 3 digits = one pixel (R,G,B)
+    side = int(sqrt(len(Msg)/3))  # Getting the size of the matrix, to make a square matrix, and as such a square image
     w, h = side, side
     matrix = np.zeros((h, w, 3), dtype=np.uint8)
     for i in range(1,side+1):
         for j in range(1,side+1):
             a = (j-1) + (i-1)*10
             for h in range(1,4):
-                matrix[i-1][j-1][h-1] = split[a][h-1]
+                matrix[i-1][j-1][h-1] = split[a][h-1]  # Place the numbers from the "split" list into a matrix suitable for fromarray function
 
     img = Image.fromarray(matrix, 'RGB')
-    img.save('Output_image2.png')   # all good!
+    img.save('Output_image2.png')   # Image saved, make it a choice tho
 
 
 
@@ -121,21 +144,22 @@ txt_write = tk.Entry(root, relief=tk.GROOVE, bd=1, width=60, textvariable=name)
 
 
 def decypher():
-    img = Image.open("Output_image2.png")
+    img = Image.open("Output_image2.png")  #to give the choice as to where to open it
     imgArray = np.array(img)
 
     b = imgArray.flatten()
     b = list(b)
-    ID_R = "z     "
+    ID_R = "      "  # to input from entry
 
     if len(ID_R)%3 != 0:
         loop = 3-(len(ID_R)%3)
         for i in range(loop):
             ID_R += " "
+    ID_compare = str()
+    for i in range(int(len(ID_R))):
+        ID_compare += chr(b[i])
 
-    ID_compare = b[len(ID_R)]
-    if b[len(ID_R)] == ID_R:
-    
+    if ID_compare == ID_R:
         WOID_L = int(len(ID_R))
         WOID = b[WOID_L:]          # Removing ID, as it is not encrypted
 
@@ -149,6 +173,7 @@ def decypher():
 
         privateKey  = rsa.PrivateKey.load_pkcs1(privateKeyPEM.encode('utf8'))
         decMessage = rsa.decrypt(WOID_b, privateKey).decode()
+        txt_read.delete(1.0, tk.END)
         txt_read.insert(tk.END, decMessage)
     else:
         txt_read.insert(tk.END, "Incompatible ID")
